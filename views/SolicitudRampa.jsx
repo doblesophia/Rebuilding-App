@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Image, Modal } from 'react-native'
-import AccessDropdown from '../components/AccessDriopdown';
+import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Image, Modal, Alert } from 'react-native'
+//import AccessDropdown from '../components/AccessDriopdown';
 import ImagenPerfil from './../assets/imagenprofile1.png';
 import cameraImage from './../assets/camara.png';
 import calendarIcon from './../assets/calendar.png';
@@ -9,8 +9,9 @@ import { registerTranslation } from 'react-native-paper-dates';
 import { useRoute } from '@react-navigation/native';
 import CalendarPicker from 'react-native-calendar-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import uploadImageToGoogleStorage from '../firebase/googleCloud.js';
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-
 
 
 
@@ -49,6 +50,90 @@ const SolicitudRampa = (props) => {
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [unidadVecinal, setUnidadVecinal] = useState("")
   const [rampas, setRampas] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  
+   const [isOpen, setIsOpen] = useState(false);
+    const [largo, setLargo] = useState('');
+    const [ancho, setAncho] = useState(1.2);
+    const [alto, setAlto] = useState('')
+    const [volumen, setVolumen] = useState(null);
+    const [comuna, setComuna] = useState("")
+    const precio = (ancho * largo * 28000 * 2)
+
+  
+  const AccessDropdown = ({ imageSource, onAreaChange  }) => {
+   
+  
+    useEffect(() => {
+      if (largo && ancho && alto) {
+        const result = parseFloat(largo) * parseFloat(ancho) * parseFloat(alto);
+        const areaValue = result.toFixed(2);
+        setVolumen(areaValue);
+        
+        // Llama a la función proporcionada por el componente padre para actualizar el valor en el componente padre
+        if (onAreaChange) {
+          onAreaChange(areaValue);
+        }
+      }
+    }, [largo, ancho, onAreaChange, alto]);
+  
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.button} onPress={() => setIsOpen(!isOpen)}>
+          {imageSource && <Image source={imageSource} style={styles.icon} />}
+          <Text style={styles.buttonText}>Acceso Universal ▼</Text>
+        </TouchableOpacity>
+        {isOpen && (
+          <View>
+            <TextInput 
+              style={styles.input}
+              placeholder="Largo"
+              onChangeText={setLargo}
+              keyboardType="numeric"
+            />
+            <TextInput 
+              style={styles.input}
+              placeholder="1.2"
+              value={ancho}
+              keyboardType="numeric"
+            />
+              <TextInput 
+              style={styles.input}
+              placeholder="Alto"
+              onChangeText={setAlto}
+              keyboardType="numeric"
+            />
+            {volumen && <Text style={styles.areaText}>Volumen de la Rampa: {volumen} M3</Text>}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const openImagePicker = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.cancelled) {
+        // La imagen se seleccionó correctamente
+        setSelectedImage(result.uri);
+        
+        
+        const assets = result.assets;
+        const firstAsset = assets.length > 0 ? assets[0] : null;
+        const uri = firstAsset ? firstAsset.uri : null;
+        await uploadImageToGoogleStorage(result.uri);
+      }
+    } catch (error) {
+      console.error('Error al abrir el selector de imágenes:', error);
+      Alert.alert('Error', 'Hubo un error al abrir el selector de imágenes.');
+    }
+  }
 
   const handleAreaChange = (newArea) => {
     setArea(newArea);
@@ -105,6 +190,13 @@ const SolicitudRampa = (props) => {
         const direccionId = lugarId;
         console.log("Hola, este es el consolelog de la dirección", direccionRampa);
         console.log("soy el id de la direccion", direccionId)
+
+        await new Promise((resolve) => {
+          setComuna((prevComuna) => {
+            resolve(prevComuna);
+            return prevComuna;
+          });
+        });
         
         const response = await axios.post("https://2lfj6g4k-3000.brs.devtunnels.ms/rampas", {
 
@@ -120,7 +212,8 @@ const SolicitudRampa = (props) => {
           location:{
             lat: location.latitude,
             lng: location.longitude
-          }
+          },
+          comuna: comuna
         } )
         console.log('Respuesta del servidor al crear la rampa:', response.data);
         if (response && response.data) {
@@ -134,7 +227,7 @@ const SolicitudRampa = (props) => {
 
         setRampas((prevRampas) => [...prevRampas, response.data.response]);
         console.log("rampas:", rampas)
-        props.navigation.navigate('Ubicación de Rampa');
+        props.navigation.navigate('Carrito de Compras', {precio, area});
       } catch (error) {
         console.error('Error:', error.message);
 if (error.response) {
@@ -162,10 +255,12 @@ if (error.response) {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
 
       <View style={styles.imagePlaceholder}>
-        <Image source={ImagenPerfil} style={styles.image} resizeMode="contain" />
+        <Image source={selectedImage||ImagenPerfil} style={styles.image} resizeMode="contain" />
+      <TouchableOpacity onPress={openImagePicker}>
         <View style={styles.circle}>
           <Image source={cameraImage} style={styles.cameraIcon} resizeMode="contain" />
         </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.inputContainer}>
@@ -198,6 +293,12 @@ if (error.response) {
           onChangeText={(text) => setUnidadVecinal(text)}
         />
         <Text style={styles.addressText}>{direccionRampa}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Comuna"
+          value={comuna}
+          onChangeText={(text) => setComuna(text)}
+        />
       </View>
 
       <AccessDropdown imageSource={Rampa} onAreaChange={handleAreaChange} />
@@ -238,9 +339,14 @@ if (error.response) {
           value={observacion} 
           onChangeText={setObservacion} />
       </View>
-
+        
+        <View>
+          <Text>
+          Total:${precio}
+          </Text>
+        </View>
        <TouchableOpacity style={styles.sendButton} onPress={handleEnviar}>
-        <Text style={styles.sendButtonText}>Enviar</Text>
+        <Text style={styles.sendButtonText}>Pagar</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -365,6 +471,44 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     padding: 10,
   },
+  container: {
+    borderWidth: 1,
+    borderColor: '#39A3E8',
+    borderRadius: 10,
+    padding: 10,
+},
+icon: {
+  width: 25,
+  height: 25,
+  marginRight: 15,
+},
+button: {
+  backgroundColor: '#39A3E8',
+  height: 36,
+  borderRadius: 5,
+  flexDirection: 'row',
+  justifyContent: 'flex-start',
+  alignItems: 'center',
+  paddingLeft: 25,
+},
+buttonText: {
+  color: 'white',
+},
+input: {
+  height: 36,
+  borderWidth: 1,
+  borderColor: '#39A3E8',
+  borderRadius: 10,
+  width: '100%',
+  marginBottom: 5,
+  color: '#39A3E8',
+  paddingLeft: 10,
+},
+areaText: {
+  marginTop: 10,
+  fontWeight: 'bold',
+  color: '#39A3E8',
+}
 });
 
-export default SolicitudRampa;
+export default SolicitudRampa

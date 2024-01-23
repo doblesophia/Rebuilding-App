@@ -1,13 +1,13 @@
-import React, {useEffect} from 'react';
-import { View, StyleSheet, Image,ImageBackground, Text  } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import { View, StyleSheet, Image,ImageBackground, Text, Button, TouchableWithoutFeedback  } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //import Header from './Header';
 
 
 const Lobby = (props) => {
+    const [role, setRole] = useState(null)
 
     useEffect(() => {
         checkSession();
@@ -24,6 +24,8 @@ const Lobby = (props) => {
           if (!userToken) {
             props.navigation.navigate('Inicia sesión'); 
           }
+
+          setRole(role)
           
         } catch (error) {
           console.error('Error al verificar la sesión:', error);
@@ -34,7 +36,7 @@ const Lobby = (props) => {
         // Verificar la sesión antes de navegar a la pantalla "RCD"
         checkSession();
         // Si la sesión está verificada, navegar a la pantalla "RCD"
-        props.navigation.navigate('Ubicaciones'); // Cambia 'RCD' con el nombre de la pantalla correspondiente
+        props.navigation.navigate('Matches Ubicación'); // Cambia 'RCD' con el nombre de la pantalla correspondiente
       };
 
       const handleRampas = () => {
@@ -42,7 +44,7 @@ const Lobby = (props) => {
       }
     return (
         <ImageBackground 
-            source={require('../assets/Trabajando.png')} 
+            source={require('../assets/construccion.jpg')} 
             style={styles.container}
         >
         
@@ -51,7 +53,8 @@ const Lobby = (props) => {
                     style={styles.profileImage} 
                     /> 
         */}
-            <Header style={styles.customHeader} /> 
+         <View style={styles.overlay} />
+
 
             <Image 
                 source={require('../assets/Ellipse.png')} 
@@ -72,11 +75,11 @@ const Lobby = (props) => {
                 <Text style={styles.circleTopCenterText}>RCD Market</Text>
             </TouchableOpacity>
 
-            <View style={styles.circleTopRightContainer}>
+            <TouchableOpacity style={styles.circleTopRightContainer} onPress={()=>props.navigation.navigate("Perfil Vecino")}>
                 <Image source={require('../assets/emprendedor.png')} style={styles.circleTopRightImage} />
                 <Text style={styles.circleTopRightText}>Vecino</Text>
                 <Image source={require('../assets/circuloAzul.png')} style={styles.circleTopRight} />
-            </View>
+            </TouchableOpacity>
 
             <TouchableOpacity style={styles.circleBottomLeftContainer} onPress={() => props.navigation.navigate('Mapa')}>
                 <Image source={require('../assets/territorial.png')} style={styles.circleBottomLeftImage} />
@@ -84,29 +87,34 @@ const Lobby = (props) => {
                 <Image source={require('../assets/circuloVerde.png')} style={styles.circleBottomLeft} />
             </TouchableOpacity>
 
-            <View style={styles.circleBottomCenterContainer}>
+            {role==='2' ? 
+                (<TouchableOpacity style={styles.circleBottomCenterContainer} onPress={()=>props.navigation.navigate("Matches Ubicación")}>
                 <Image source={require('../assets/circuloAzul.png')} style={styles.circleBottomCenter} />
                 <Image source={require('../assets/brothers.png')} style={styles.bottomCenterImage} />
                 <Text style={styles.circleBottomCenterText}>Matches</Text>
-            </View>
+            </TouchableOpacity>) :
+             (<TouchableOpacity style={styles.circleBottomCenterContainer} onPress={()=>props.navigation.navigate("Perfil Constructora")}>
+             <Image source={require('../assets/circuloAzul.png')} style={styles.circleBottomCenter} />
+             <Image source={require('../assets/emprendedor.png')} style={styles.bottomCenterImage} />
+             <Text style={styles.circleBottomCenterText}>Perfil{"\n"}Constructora</Text>
+         </TouchableOpacity>)}
 
 
-            <View style={styles.circleBottomRightContainer}>
+            <TouchableOpacity style={styles.circleBottomRightContainer} onPress={()=>props.navigation.navigate("Ubicaciones")}>
                 <Image source={require('../assets/circuloVerde.png')} style={styles.circleBottomRight} />
                 <Image source={require('../assets/rampas.png')} style={styles.bottomRightImage} />
                 <Text style={styles.circleBottomRightText}>Obras{"\n"}Constructoras</Text>
-            </View>
+            </TouchableOpacity>
 
-
-            {/* <TouchableOpacity onPress={() => props.navigation.navigate('Mapa')}>
+            <TouchableWithoutFeedback onPress={() => {
+    console.log('Botón presionado');
+    props.navigation.navigate('Mapa');
+}}>
                 <View style={styles.roundedRectangle}>
                     <Image source={require('../assets/reciclaje.png')} style={styles.rectangleImage} />
-                    <Text style={styles.rectangleText}>Reciclaje{"\n"}territorial social</Text>
-                    <View style={styles.arrowCircle}>
-                        <Text style={styles.arrowText}>&gt;</Text>
-                    </View>
+                    <Text style={styles.rectangleText}>RECICLAJE TERRITORIAL SOCIAL</Text>
                 </View>
-            </TouchableOpacity> */}
+            </TouchableWithoutFeedback>
         </ImageBackground>
     );
 };
@@ -209,9 +217,8 @@ const styles = StyleSheet.create({
         borderColor: '#FFF',
         flexDirection: 'row', // Para contener y alinear los elementos hijos horizontalmente.
         alignItems: 'center', // Centrar la imagen verticalmente dentro del rectángulo.
-        top: 250,  // Ajusta para cambiar la posición vertical.
-        alignSelf: 'center', // Esto centra el rectángulo horizontalmente.
-        justifyContent: 'flex-end',
+        top: 250,  // Ajusta para cambiar la posición vertical// Esto centra el rectángulo horizontalmente.
+        justifyContent: 'flex-start',
         paddingHorizontal: 10,  // Un poco de padding horizontal para que los elementos no estén pegados al borde.
     },
     reciclajeImage: {
@@ -222,14 +229,14 @@ const styles = StyleSheet.create({
     },
     rectangleText: {
         width: 155,
-        height: 32,
+        height: 40,
         color: '#2C2D2D',
         fontSize: 13,
         fontWeight: '600',
-        lineHeight: 17,
-     // Centra el texto horizontalmente.
-        textTransform: 'uppercase',
-        marginLeft: 10,  // Añade espacio entre la imagen y el texto.
+     // Centra el texto horizontalmente
+        marginLeft: 10, 
+        position: "absolute",
+        left: 70// Añade espacio entre la imagen y el texto.
     },
     arrowCircle: {
         width: 38,
@@ -463,15 +470,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         zIndex: 3,
     },
-    // logo:{
-    //     backgroundColor: "gray",
-    //     width: 100,
-    //     height: 100,
-    //     position: "absolute",
-    //     top: 230,
-    //     borderRadius: 55
-    // }
-        
+    rectangleImage:{
+        position: "absolute",
+        left: 30
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#181818',
+        opacity: 0.7,
+      },      
 });
 
 export default Lobby;

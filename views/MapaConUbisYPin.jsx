@@ -4,13 +4,10 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import greenCircle from "../assets/circuloVerde.png"
 import axios from 'axios';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const MapaConUbisYPin = () => {
-  const route = useRoute()
-  const {nombreEmpresa, direccion, hormigonV} = route.params
-  console.log(nombreEmpresa, direccion, hormigonV)
-  
+  const navigation = useNavigation()
   const map = useRef(null);
   const [locations, setLocations] = useState([]);
 
@@ -52,9 +49,9 @@ const MapaConUbisYPin = () => {
   return (
     <View style={styles.container}>
 
-<TouchableOpacity style={styles.profile}>
+<TouchableOpacity style={styles.profile} onPress={() => navigation.navigate('Perfil Constructora')}>
         <Image source={greenCircle}/>
-    </TouchableOpacity>
+  </TouchableOpacity>
     <Text style={styles.perfil}>Perfil</Text>
       <MapView
         ref={map}

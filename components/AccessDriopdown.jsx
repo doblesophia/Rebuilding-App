@@ -6,21 +6,22 @@ import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image } from 'reac
 const AccessDropdown = ({ imageSource, onAreaChange  }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [largo, setLargo] = useState('');
-  const [ancho, setAncho] = useState('');
-  const [area, setArea] = useState(null);
+  const [ancho, setAncho] = useState(1.2);
+  const [alto, setAlto] = useState('')
+  const [volumen, setVolumen] = useState(null);
 
   useEffect(() => {
-    if (largo && ancho) {
-      const result = parseFloat(largo) * parseFloat(ancho);
+    if (largo && ancho && alto) {
+      const result = parseFloat(largo) * parseFloat(ancho) * parseFloat(alto);
       const areaValue = result.toFixed(2);
-      setArea(areaValue);
+      setVolumen(areaValue);
       
       // Llama a la función proporcionada por el componente padre para actualizar el valor en el componente padre
       if (onAreaChange) {
         onAreaChange(areaValue);
       }
     }
-  }, [largo, ancho, onAreaChange]);
+  }, [largo, ancho, onAreaChange, alto]);
 
   return (
     <View style={styles.container}>
@@ -38,11 +39,17 @@ const AccessDropdown = ({ imageSource, onAreaChange  }) => {
           />
           <TextInput 
             style={styles.input}
-            placeholder="Ancho"
-            onChangeText={setAncho}
+            placeholder="1.2"
+            value={ancho}
             keyboardType="numeric"
           />
-          {area && <Text style={styles.areaText}>Área de la Rampa: {area} M2</Text>}
+            <TextInput 
+            style={styles.input}
+            placeholder="Alto"
+            onChangeText={setAlto}
+            keyboardType="numeric"
+          />
+          {volumen && <Text style={styles.areaText}>Volumen de la Rampa: {volumen} M3</Text>}
         </View>
       )}
     </View>

@@ -24,7 +24,10 @@ const AddConstructionS = (props) => {
     const [observacion, setObservacion] = useState("")
     const [calendarVisible, setCalendarVisible] = useState(false);
     const [nombreEmpresa, setNombreEmpresa] = useState("")
-
+    const [personas, setPersonas] = useState(0)
+    const [unidadVecinal, setUnidadVecinal] = useState(0)
+    const [tipoDeConstruccion, setTipoDeConstruccion] = useState("")
+    const [rubroConstruccion, setRubroConstruccion] = useState("")
     const route = useRoute()
     const {direccion, lugarId, location} = route.params
     console.log("location",location)
@@ -113,7 +116,11 @@ const AddConstructionS = (props) => {
             location:{
               lat: location.latitude,
               lng: location.longitude
-            }
+            },
+            personas,
+            unidadVecinal,
+            tipoDeConstruccion,
+            rubroConstruccion
           } )
 
           if (response && response.data) {
@@ -122,11 +129,8 @@ const AddConstructionS = (props) => {
               console.error('Error: nombreEmpresa es undefined');
               return;
             }
-              props.navigation.navigate('Ubicaciones', {
-                nombreEmpresa,
-                direccion,
-                hormigonV
-              });
+              props.navigation.navigate('Ubicaciones');
+        
             
           } else {
             // La respuesta no es válida o no tiene un cuerpo JSON
@@ -202,6 +206,30 @@ const AddConstructionS = (props) => {
         <Text style={styles.nombreConstructoraTexto}>
             {direccion}
         </Text>
+        <TextInput
+        style={styles.input}
+        placeholder='Personas de la obra'
+        value={personas}
+        onChangeText={(text)=>setPersonas(text)}
+        /> 
+        <TextInput
+        style={styles.input}
+        placeholder='Unidad Vecinal'
+        value={unidadVecinal}
+        onChangeText={(text)=>setUnidadVecinal(text)}
+        /> 
+        <TextInput
+        style={styles.input}
+        placeholder='Tipo de Construcción'
+        value={tipoDeConstruccion}
+        onChangeText={(text)=>setTipoDeConstruccion(text)}
+        /> 
+         <TextInput
+        style={styles.input}
+        placeholder='Rubro de Construcción'
+        value={rubroConstruccion}
+        onChangeText={(text)=>setRubroConstruccion(text)}
+        /> 
         </View>
        <Text style={styles.centeredText}>Residuos a Ofertar:</Text>
        <DropdownForm style={styles.contenedoresDesplegables} title="Hormigón" imageSource={hormigonV} onVolumenChange={(newVolumen) => handleVolumenChange(newVolumen, 'hormigon')} />
@@ -295,7 +323,7 @@ const styles = StyleSheet.create({
       nombreConstructoraContainer:{
         justifyContent: "center",
         alignItems: "center",
-        paddingTop: 20
+        paddingTop: 20,
       },
       nombreConstructoraTexto:{
         paddingVertical: 3

@@ -4,15 +4,52 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import matches from '../assets/brothers.png';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MapaconRampasyObras = (props) => {
   const [obras, setObras] = useState([]);
   const [rampas, setRampas] = useState([]);
+  const [correo, setCorreo] = useState("")
+  const [nombre, setNombre] = useState("")
+  const [apellido, setApellido] = useState("")
+  const [role, setRole] = useState(null)
+
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const checkSession = async () => {
+    try {
+      
+      const userToken = await AsyncStorage.getItem('userToken');
+      console.log(userToken)
+      
+      
+      if (!userToken) {
+        props.navigation.navigate('Inicia sesión'); 
+      }
+
+    const correo = await AsyncStorage.getItem('userCorreo');
+    const nombre = await AsyncStorage.getItem('nombre');
+    const apellido = await AsyncStorage.getItem('apellido')
+    const role = await AsyncStorage.getItem("userRole")
+
+    setCorreo(correo)
+    setNombre(nombre)
+    setApellido(apellido)
+    setRole(role)
+    console.log(correo)
+    console.log(nombre)
+      
+    } catch (error) {
+      console.error('Error al verificar la sesión:', error);
+    }
+  };
+
+  useEffect(() => {
+    checkSession();
+  }, []);
   const fetchData = async () => {
     try {
       const obrasResponse = await axios.get("https://2lfj6g4k-3000.brs.devtunnels.ms/obras", {
@@ -180,12 +217,12 @@ const MapaconRampasyObras = (props) => {
         ))}
 
       </MapView>
-      <TouchableOpacity style={styles.greenCircleTouchable} onPress={findMatches}>
+      {role === '2' ? <TouchableOpacity style={styles.greenCircleTouchable} onPress={findMatches}>
         <View>
           <Image source={matches} />
           <Text style={styles.matchtext}>Match!</Text>
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity>: null}
     </View>
   );
           }

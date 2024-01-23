@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "rebuildingapp",
+  "private_key_id": "d4bf0559a7ec728103b0ec85688f848e61c6c65d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0Gll3GNRwPfyK\n5e8kYVtEVIxByMlafrcbRwSrv5YbwzgNg3speXxbY9YIkQljcDrb7yvoAL7d8m9m\nSKp0f5xvQGkDCpWBbI0JnrXVvhU0k4qfpXF9cV5qss0r5wugA8nnDUtL98CGIrOF\nnWUEqgzOqweo/TJ5tC0hZseNBlSZ1Xmt6SfMtmNtXChVYOTzNWp4gPbXX8za7wKT\nN+ULWiIJ/NsYzS2As8C79VbvBTr/3y/0324f+2HHY4TJsNv/RhLcPukZTyfycc5+\ngYAt5hoiM/fIANpvqg0mf6XX410xmkcy5dLWuMjZtCVZBoWQa0N4YRH8QAg/Al/b\nyKwUelL3AgMBAAECggEADM/LCXPUuN9P9bmBl37tdSDmkU9tM2jMMb6NkIIidXsf\no6Z0vnCL7hxd/2IB3vb+2OJcpzZWXYd/cTE+HudtA2T7k2HPXNOR/NszaC8LZyAP\nvmeQeTH1W3W4rqTS6OEcHbmOX6sSIPia+KhHpVtLafA0rUrFqm6svzGGhHuszPyK\nDIBEckGg09ts+7gYUrnxrCYjOlIHZz/J4AwiFWk8ty4asQHF9TIjKInTNP/SBVbE\nMJ+QEn6F6DTt3XWOOBQBrkhD7L25AfBTu2j8ZcHhUWoWml639N4CP+MG6pEgKuNt\nDPC14NnSfk6YUYF0s8pOQuWkoPggx10e9HlFofGugQKBgQDYS4HIyWNxyrxiJHXV\nZoyEOdG8ALrKlQGZ9L6+3YTBkibfv1/UHJ49vpY1f2yiDBPpWHEKXpV3++8qjLMR\noO2rUYYndvikLzVDz1n9bemEvdfYVsV64FDwAY6KZClRWOU+M4v4+m9Y9BHdH8HW\n3JTg8TwI443mMVcNqJH9BT3ulwKBgQDVKgvyCejLVbu7seb+s4XX9m4/iSZJepPX\nHHDnttJLeAKv8u+ML7FVJ+3qeoWm1hkqv87jCdltGrObc9NOZbDvmRyTO6v4vnDW\nCbhE/Ox9fTZzwxaQdFVRiUA/Dq+utwNz8i9p+Uv/wm4w73qYOt2hZB20Dxl9yNCk\nz177woGqoQKBgGnKFIJWLbNcS2NdHdzwOU360aA4YyPuWUgpspm70tCyYR0ShxZB\noQvmCaXE2ycu7RY2UaOWu1hh+oo/It4+bcBbMVhgEiCLjmvKIOOZPJvWFpoTZqdA\ny5V3zXXWo3bMGeOgZpeyNX+2cH5MqAwk+xRCKPDYC3FJNKDTkAPG6pGlAoGBAMWF\nyLvnYsfIEcXC/AFX6NZNi6tkMw4zf3r858JPLl6wPg08V6zXJMN71IJKNj56daef\nRN4s6kSnUXbixRMIOARNJKVpzdkY3wX2y8FhfOJrfGGYjPgeVFDRla7YtQJ4o8J0\n0GqqjznXuLOvtTIKmgRK+Rs4Qq7DvlJ5tdIkUnMBAoGAC+0tila8LItCFDXT0hx8\nw4yNcT6EDWgZ282n+UEulrx8HarOLP1kSYZsWKNyGf0LxtrkrLYkGmBc93iFe4g1\npcNtC3s8sAK8oNVvJQqGvaGm9DMxIhpFRClR4UX0ZmaA82znI88d0Ba9cU6oVNuQ\n8Q3WIgGiO/shR9G4tUnLPVo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-yr7dk@rebuildingapp.iam.gserviceaccount.com",
+  "client_id": "101392883747906128631",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-yr7dk%40rebuildingapp.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
