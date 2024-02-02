@@ -30,6 +30,7 @@ const Tab = createBottomTabNavigator()
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 import { BottomTabNavigator } from "@react-navigation/native"
+import MapaRampasSinPagar from './views/MapaRampasSinPagar.jsx';
 
 export default function App() {
   const [userRole, setRole] = useState(null);
@@ -80,6 +81,7 @@ export default function App() {
           <Stack.Screen name="Perfil Constructora" component={SlideConstructora} />
           <Stack.Screen name="Matches" component={Matches}/>
           <Stack.Screen name='Carrito de Compras' component={CarritoDeCompras}/>
+          <Stack.Screen name='Rampas que Necesitamos' component={MapaRampasSinPagar}/>
           <Stack.Screen name="Cierra tu sesión" component={CierreSesion} />
     
     </Stack.Navigator>

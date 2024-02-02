@@ -9,9 +9,10 @@ import { registerTranslation } from 'react-native-paper-dates';
 import { useRoute } from '@react-navigation/native';
 import CalendarPicker from 'react-native-calendar-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import uploadImageToGoogleStorage from '../firebase/googleCloud.js';
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from 'expo-image-picker'
 import axios from 'axios';
+import cloudinaryConfig from '../cloudinary/cloudinaryConfig.js';
+import { encode } from 'base-64'
 
 
 
@@ -53,12 +54,14 @@ const SolicitudRampa = (props) => {
   const [selectedImage, setSelectedImage] = useState(null);
   
    const [isOpen, setIsOpen] = useState(false);
-    const [largo, setLargo] = useState('');
+    const [largo, setLargo] = useState(0);
     const [ancho, setAncho] = useState(1.2);
-    const [alto, setAlto] = useState('')
+    const [alto, setAlto] = useState(0)
     const [volumen, setVolumen] = useState(null);
     const [comuna, setComuna] = useState("")
+    const [imageUrl, setImageUrl] = useState("")
     const precio = (ancho * largo * 28000 * 2)
+    const [forceRender, setForceRender] = useState(false);
 
   
   const AccessDropdown = ({ imageSource, onAreaChange  }) => {
@@ -76,6 +79,10 @@ const SolicitudRampa = (props) => {
         }
       }
     }, [largo, ancho, onAreaChange, alto]);
+
+ 
+
+
   
     return (
       <View style={styles.container}>
@@ -88,8 +95,9 @@ const SolicitudRampa = (props) => {
             <TextInput 
               style={styles.input}
               placeholder="Largo"
+              value={largo}
               onChangeText={setLargo}
-              keyboardType="numeric"
+              keyboardType="decimal-pad"
             />
             <TextInput 
               style={styles.input}
@@ -101,7 +109,8 @@ const SolicitudRampa = (props) => {
               style={styles.input}
               placeholder="Alto"
               onChangeText={setAlto}
-              keyboardType="numeric"
+              value={alto}
+              keyboardType="decimal-pad"
             />
             {volumen && <Text style={styles.areaText}>Volumen de la Rampa: {volumen} M3</Text>}
           </View>
@@ -110,30 +119,74 @@ const SolicitudRampa = (props) => {
     );
   };
 
-  const openImagePicker = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
+  const takePhoto = async () => {
+    console.log('Iniciando toma de foto...');
 
-      if (!result.cancelled) {
-        // La imagen se seleccionó correctamente
-        setSelectedImage(result.uri);
-        
-        
-        const assets = result.assets;
-        const firstAsset = assets.length > 0 ? assets[0] : null;
-        const uri = firstAsset ? firstAsset.uri : null;
-        await uploadImageToGoogleStorage(result.uri);
-      }
-    } catch (error) {
-      console.error('Error al abrir el selector de imágenes:', error);
-      Alert.alert('Error', 'Hubo un error al abrir el selector de imágenes.');
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    console.log('Resultado de permisos de cámara:', permissionResult);
+  
+    if (permissionResult.status !== 'granted') {
+      console.error('Permiso de cámara no otorgado');
+      return;
     }
-  }
+  
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+  
+    if (result.canceled === true) {
+      console.log('El usuario canceló la selección de la imagen');
+      return;
+    }
+
+  console.log('Resultado de la cámara:', result);
+  console.log('Configuración de Cloudinary:', { cloudName, apiKey, apiSecret });
+  console.log('FormData:', formData);
+  
+    // Configuración de Cloudinary
+    console.log('Configuración de Cloudinary:', cloudinaryConfig);
+    const { cloudName, apiKey, apiSecret } = cloudinaryConfig;
+  
+    const formData = new FormData();
+    formData.append('file', {
+      uri: result.assets[0].uri,
+      type: 'image/jpeg',
+      name: result.assets[0].uri.split('/').pop(),
+    });
+  
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload?upload_preset=rdvbxm5b`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Basic ${encode(`${apiKey}:${apiSecret}`)}`,
+        },
+      });
+  
+      const responseData = await response.json();
+  
+      if (response.ok) {
+          const imageUrl = responseData.secure_url;
+          setImageUrl(imageUrl)
+          console.log('URL de la imagen en Cloudinary:', imageUrl);
+          // Llamar a la función uploadImageToBackend con la URL de la imagen
+        } else {
+          // Manejar el error de Cloudinary
+          console.error('Error al subir la imagen a Cloudinary:', responseData);
+          // Puedes decidir si deseas seguir ejecutando uploadImageToBackend o manejar el error de otra manera.
+          // uploadImageToBackend(null); // Llama a la función con null o maneja el error de alguna otra manera.
+        }
+      
+    } catch (error) {
+      console.error('Error al subir la imagen a Cloudinary:', error.message);
+      // Puedes decidir si deseas seguir ejecutando uploadImageToBackend o manejar el error de otra manera.
+      // uploadImageToBackend({ uri: null }); // Llama a la función con uri nula o maneja el error de alguna otra manera.
+    }
+  };
 
   const handleAreaChange = (newArea) => {
     setArea(newArea);
@@ -183,10 +236,6 @@ const SolicitudRampa = (props) => {
 
   const handleEnviar = async () => {
     try {
-        // if (!coordenadas || coordenadas.length === 0) {
-        //   console.error('Error: Coordenadas no válidas');
-        //   return;
-        // }
         const direccionId = lugarId;
         console.log("Hola, este es el consolelog de la dirección", direccionRampa);
         console.log("soy el id de la direccion", direccionId)
@@ -213,7 +262,8 @@ const SolicitudRampa = (props) => {
             lat: location.latitude,
             lng: location.longitude
           },
-          comuna: comuna
+          comuna: comuna,
+          imageUrl
         } )
         console.log('Respuesta del servidor al crear la rampa:', response.data);
         if (response && response.data) {
@@ -243,6 +293,66 @@ if (error.response) {
 }
       }
   };
+
+  const handleRampasSinPagar = async () => {
+    try {
+        const direccionId = lugarId;
+        console.log("Hola, este es el consolelog de la dirección", direccionRampa);
+        console.log("soy el id de la direccion", direccionId)
+
+        await new Promise((resolve) => {
+          setComuna((prevComuna) => {
+            resolve(prevComuna);
+            return prevComuna;
+          });
+        });
+        
+        const response = await axios.post("https://2lfj6g4k-3000.brs.devtunnels.ms/rampas/rampassinpago", {
+
+       
+          direccionRampa,
+          nombre,
+          telefono,
+          correo,
+          observacion,
+          area,
+          selectedDate,
+          unidadVecinal, 
+          location:{
+            lat: location.latitude,
+            lng: location.longitude
+          },
+          comuna: comuna,
+          imageUrl
+        } )
+        console.log('Respuesta del servidor al crear la rampa:', response.data);
+        if (response && response.data) {
+        console.log("ubicación rampa:",response.data)
+          
+          props.navigation.navigate('Rampas que Necesitamos');
+        } else {
+          // La respuesta no es válida o no tiene un cuerpo JSON
+          console.error('Error: Respuesta no válida');
+        }
+
+        setRampas((prevRampas) => [...prevRampas, response.data.response]);
+        console.log("rampas:", rampas)
+        props.navigation.navigate('Rampas que Necesitamos', {precio, area});
+      } catch (error) {
+        console.error('Error:', error.message);
+if (error.response) {
+  // La solicitud se hizo y el servidor respondió con un código de estado diferente de 2xx
+  console.error('Respuesta del servidor:', error.response.data);
+  console.error('Código de estado:', error.response.status);
+} else if (error.request) {
+  // La solicitud se hizo pero no se recibió respuesta
+  console.error('No se recibió respuesta del servidor');
+} else {
+  // Algo sucedió en la configuración de la solicitud que desencadenó un error
+  console.error('Error de configuración de la solicitud:', error.message);
+}
+      }
+  };
   useEffect(() => {
     console.log('Estado de rampas actualizado:', rampas);
   }, [rampas]);
@@ -251,12 +361,15 @@ if (error.response) {
     setSelectedDate(newDate);
     setShowDatePicker(false);
   };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
 
       <View style={styles.imagePlaceholder}>
-        <Image source={selectedImage||ImagenPerfil} style={styles.image} resizeMode="contain" />
-      <TouchableOpacity onPress={openImagePicker}>
+       
+    <TouchableOpacity onPress={takePhoto}>
+      {!imageUrl ? <Image source={ImagenPerfil} style={styles.image} resizeMode="contain" />:
+      <Image key={forceRender} source={{uri: imageUrl}} style={styles.image} resizeMode='contain'/>}
         <View style={styles.circle}>
           <Image source={cameraImage} style={styles.cameraIcon} resizeMode="contain" />
         </View>
@@ -345,6 +458,9 @@ if (error.response) {
           Total:${precio}
           </Text>
         </View>
+        <TouchableOpacity style={styles.sendButton} onPress={handleRampasSinPagar}>
+        <Text style={styles.sendButtonText}>Generar necesidad sin pago</Text>
+      </TouchableOpacity>
        <TouchableOpacity style={styles.sendButton} onPress={handleEnviar}>
         <Text style={styles.sendButtonText}>Pagar</Text>
       </TouchableOpacity>

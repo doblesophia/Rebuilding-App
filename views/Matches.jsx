@@ -132,8 +132,10 @@ const deleteInformacion = async (matchId) => {
           <View style={styles.containerMatch}>
             <Text style={styles.nombreConstructora}>Nombre Constructora: {obra.nombreEmpresa}</Text>
             <Text style={styles.direccionObra}>Dirección de la obra: {obra.direccion}</Text>
-            <Image source={fotoMatch} />
+            <Image source={{uri: rampa.imageUrl}} style={styles.foto}/>
+            {console.log("rampa", rampa)}
             <Text style={styles.textRampa}>Dirección Rampa: {rampa.direccionRampa}</Text>
+            <Text>Teléfono: {rampa.telefono}</Text>
             <TouchableOpacity style={styles.buttonMatch} onPress={() => deleteInformacion(item._id)}>
               <Text style={styles.textButton}>Eliminar match</Text>
             </TouchableOpacity>
@@ -199,6 +201,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     fontWeight: "bold",
     borderRadius: 10
+  },
+  foto:{
+    width: "100%",
+    height: 150
   }
 });
 

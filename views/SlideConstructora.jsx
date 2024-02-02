@@ -9,6 +9,8 @@ import axios from 'axios'
 import { useRoute } from '@react-navigation/native'
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import cloudinaryConfig from '../cloudinary/cloudinaryConfig.js'
+import { encode } from 'base-64'
 
 const SlideConstructora = ()  => {
 
@@ -33,7 +35,7 @@ const [modalTipoConstruccion, setModalTipoConstruccion] = useState("Ej.Edificio"
 const [modalRubroConstruccion, setModalRubroConstruccion] = useState("Ej.Habitacional");
 const [selectedPerfilObra, setSelectedPerfilObra] = useState(null);
 const [unidadesVecinales, setUnidadesVecinales] = useState(0)
-const [tempUri, setTempUri] = useState("")
+const [imageUrl, setImageUrl] = useState("")
 
 const checkSession = async () => {
     try {
@@ -191,7 +193,7 @@ const updateAndCloseModal = async () => {
 
 const buscarPerfilPorEmpresa = async (empresa) => {
     try {
-        const response = await axios.get("https://2lfj6g4k-3000.brs.devtunnels.ms/perfilobra", {
+        const response = await axios.get("https://2lfj6g4k-3000.brs.devtunnels.ms/subirfoto", {
             params: {
                 nombreEmpresa: empresa
             }
@@ -207,117 +209,100 @@ const buscarPerfilPorEmpresa = async (empresa) => {
     }
 };
 
-const createPerfilObras = async () => {
-    try {
-        const response = await axios.post("https://2lfj6g4k-3000.brs.devtunnels.ms/perfilobra", {
-            unidadVecinal,
-            rampas,
-            personas,
-            hormigonV,
-            nombreEmpresa,
-            direccion,
-            tipoDeConstruccion,
-            rubroConstruccion,
-            img: tempUri
-        });
-
-        console.log("Perfil obra creado:", response.data);
-
-        const nuevoPerfilObraId = response.data.response._id;
-        console.log(nuevoPerfilObraId);
-
-        setObraId(nuevoPerfilObraId);
-    } catch (error) {
-        console.log("Error al crear perfil de obras:", error);
-    }
-};
-
 const takePhoto = async () => {
-    try {
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.5,
-        });
+  const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
-        if (result.canceled) {
-            // El usuario canceló la selección de la imagen
-            console.log('Selección de la cámara cancelada');
-            return;
-        }
+  if (permissionResult.status !== 'granted') {
+    console.error('Permiso de cámara no otorgado');
+    return;
+  }
 
-        if (!result.assets || result.assets.length === 0) {
-            // La URI de la imagen no está disponible
-            console.log('URI de la imagen no disponible');
-            return;
-        }
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 1,
+  });
 
-        const firstAsset = result.assets[0];
-        if (!firstAsset.uri) {
-            console.log('URI de la imagen no disponible');
-            return;
-        }
+  if (result.canceled === true) {
+    // El usuario canceló la selección de la imagen
+    return;
+  }
 
-        setTempUri(firstAsset.uri);
-        uploadImage(firstAsset, obraId); // Pasar el objeto y obraId
-        console.log("result solo", result);
-    } catch (error) {
-        console.error('Error al lanzar la cámara:', error);
-    }
+  // Configuración de Cloudinary
+  const { cloudName, apiKey, apiSecret } = cloudinaryConfig;
 
+  const formData = new FormData();
+  formData.append('file', {
+    uri: result.assets[0].uri,
+    type: 'image/jpeg',
+    name: result.assets[0].uri.split('/').pop(),
+  });
+
+  try {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload?upload_preset=rdvbxm5b`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Basic ${encode(`${apiKey}:${apiSecret}`)}`,
+      },
+    });
+
+    const responseData = await response.json();
+
+    if (response.ok) {
+        const imageUrl = responseData.secure_url;
+        console.log('URL de la imagen en Cloudinary:', imageUrl);
+        // Llamar a la función uploadImageToBackend con la URL de la imagen
+        uploadImageToBackend(imageUrl);
+      } else {
+        // Manejar el error de Cloudinary
+        console.error('Error al subir la imagen a Cloudinary:', responseData);
+        // Puedes decidir si deseas seguir ejecutando uploadImageToBackend o manejar el error de otra manera.
+        // uploadImageToBackend(null); // Llama a la función con null o maneja el error de alguna otra manera.
+      }
+    
+  } catch (error) {
+    console.error('Error al subir la imagen a Cloudinary:', error.message);
+    // Puedes decidir si deseas seguir ejecutando uploadImageToBackend o manejar el error de otra manera.
+    // uploadImageToBackend({ uri: null }); // Llama a la función con uri nula o maneja el error de alguna otra manera.
+  }
 };
-
-const checkCameraPermission = async () => {
-    const { status } = await ImagePicker.getCameraPermissionsAsync();
-    if (status !== 'granted') {
-        await ImagePicker.requestCameraPermissionsAsync();
-    }
-};
-
-useEffect(() => {
-    checkCameraPermission();
-}, []);
-
-const uploadImage = async (data, obraId) => {
-
-    if (!data || !data.uri) {
-        console.error('URI de la imagen no disponible');
-        return;
-    }
-
-    const fileToUpload = {
-
-        uri: data.uri,
-        type: data.type,
-        name: data.uri.split('/').pop()
-    };
-
-    const formData = new FormData();
-    formData.append('archivo', fileToUpload);
-
+const uploadImageToBackend = async (imageUrl) => {
     try {
-        const resp = await axios.post(`https://2lfj6g4k-3000.brs.devtunnels.ms/subirimagen/perfilobra`, formData, 
-           { timeout: 5000}, {
-            headers: { 'Content-Type': 'multipart/form-data' },
+        const response = await fetch('https://2lfj6g4k-3000.brs.devtunnels.ms/subirfoto', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Cambiado a JSON
+          },
+          body: JSON.stringify({ imageUrl,
+        unidadVecinal: unidadesVecinales,
+        rampas,
+        personas,
+        hormigonV,
+        nombreEmpresa,
+        direccion,
+        tipoDeConstruccion,
+        rubroConstruccion
+ }), // Enviar la URL como parte del cuerpo JSON
         });
-        if (resp.error) {
-            console.log(resp.error);
-          }
-    } catch (error) {
-        console.error('Error al subir la imagen:', error);
-
-        if (error.response) {
-            // La solicitud se hizo y el servidor respondió con un código de estado diferente de 2xx
-            console.error('Respuesta del servidor:', error.response.data);
-            console.error('Código de estado:', error.response.status);
-        } else if (error.request) {
-            // La solicitud se hizo pero no se recibió respuesta
-            console.error('No se recibió respuesta del servidor');
+    
+        if (response.ok) {
+          // Si la respuesta es exitosa, maneja la respuesta como JSON
+          const responseData = await response.json();
+          setImageUrl(responseData.response.img)
+          console.log('URL de la imagen en el backend:', responseData.response.img);
         } else {
-            // Algo sucedió en la configuración de la solicitud que desencadenó un error
-            console.error('Error de configuración de la solicitud:', error.message);
+          // Si la respuesta no es exitosa, maneja el error
+          console.error('Error al enviar la URL al backend:', response.statusText);
         }
-    }
+      } catch (error) {
+        console.error('Error al enviar la URL al backend:', error);
+      }
+    
 };
+
 
   return (
 
@@ -343,13 +328,11 @@ const uploadImage = async (data, obraId) => {
                 </Text>
             </View>
             <TouchableOpacity style={styles.circulo} onPress={takePhoto}>
-                {!tempUri ? <Image source={fotoPerfil} style={styles.circuloFoto}/> : 
-                 <Image source={tempUri} style={styles.circuloFoto}/>}
-                
-                <View style={styles.lapiz}>
+      {!imageUrl ? <Image source={fotoPerfil} style={styles.circuloFoto} /> :
+        <Image source={{uri: imageUrl}} style={styles.circuloFoto} />}
 
-                </View>
-            </TouchableOpacity>
+      <View style={styles.lapiz}></View>
+    </TouchableOpacity>
             <Image source={camara} style={styles.camaraCirculo}/>
             <View style={styles.cantidadRampas}>
                 <Text style={styles.numeroRampas}>
